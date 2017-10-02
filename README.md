@@ -1,6 +1,6 @@
-# CLADES
-# CLADES (CLAssification based DElimitation of Species) is a python code designed for species delimitation problem.
-# If you have questions in CLADES, please contact Jingwen Pei <jingwen.pei@uconn.edu>.
+# CLADES (CLAssification based DElimitation of Species)
+## CLADES is a python code designed for species delimitation problem.
+## If you have questions in CLADES, please contact Jingwen Pei <jingwen.pei@uconn.edu>.
 
 ==== Prerequisite ====
 
