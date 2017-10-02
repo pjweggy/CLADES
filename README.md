@@ -71,15 +71,15 @@ CLADES is able to delimit multiple populations(n>=2). To do species delimitation
   
   -- argv3 :path of libsvm commands. if path is contained in $PATH, one can leave this argv empty.
   
-For example, to analyze sequence data in temp_seq.txt:
+For example, to analyze sequence data in test_seq.txt:
 
-  $ python CLADES.py temp ../model/All <path to libsvm commands>
+  $ python CLADES.py test ../model/All <path to libsvm commands>
   
 4*. train your own model
 
 ==== Data ====
 
-CLADES uses sequences data for multiple individuals from multiple populations. There is an example input sequence file temp_seq.txt.
+CLADES uses sequences data for multiple individuals from multiple populations. There is an example input sequence file test_seq.txt containing two locus information for 80 individuals from 8 populations.
 
 Sequence data should have format:
 
@@ -105,5 +105,15 @@ CLADES outputs the best assignment for populations in sequence data. For example
 
 The Best Assignment of species clusters are:
 ['C1,C2', 'B1,B2', 'D1,D2', 'A1,A2']
+
+CLADES clusters A1 and A2 into the same cluster, same with (B1, B2), (C1, C2) and (D1, D2). That means, species delimitation for these 8 populations is 4 species, and each species has two populations.
+
+CLADES computes summary statistics for pairwise populations to file <pop1>-<pop2>.sumstat. Then use model to determine whether two populations belong to the same species. The estimation information is contained in file <pop1>-<pop2>.out. File <pop1>-<pop2>.out looks like:
+
+labels 1 -1
+-1 0.000253429 0.999747
+-1 0.00024749 0.999753
+
+Label '1' means cluster 'different species', '-1' stands for 'same species' cluster. First line '-1 0.000253429 0.999747' indicates that, the first sample is classified to 'same species' with probability 0.9997 and can be classified to 'different species' with a very low probability 0.000253. 
 
 
