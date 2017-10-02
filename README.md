@@ -83,7 +83,6 @@ CLADES uses sequences data for multiple individuals from multiple populations. T
 
 Sequence data should have format:
 
-
 10 20
 
 a01^A1 GTTTGCAAGAA-ATCATGGA
