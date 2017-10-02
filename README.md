@@ -1,6 +1,6 @@
 # CLADES (CLAssification based DElimitation of Species)
 ## CLADES is a python code designed for species delimitation problem.
-## If you have questions in CLADES, please contact Jingwen Pei <jingwen.pei@uconn.edu>.
+### If you have questions in CLADES, please contact Jingwen Pei <jingwen.pei@uconn.edu>.
 
 ==== Prerequisite ====
 
@@ -78,6 +78,8 @@ For example, to analyze sequence data in test_seq.txt:
   
 4*. train your own model
 
+With prior knowledge of related populations, one can trained a more specific model as your own classifier. For example, if one has an estimate range of θ, 𝜏 and M, one can generate simulated sequence data for two-species model. For pairwise populations, compute summary statistics and normalize to range (0, 1). Then use 'svm-train' to train your own model.
+
 ==== Data ====
 
 CLADES uses sequences data for multiple individuals from multiple populations. There is an example input sequence file test_seq.txt containing two locus information for 80 individuals from 8 populations.
@@ -114,6 +116,6 @@ labels 1 -1
 -1 0.000253429 0.999747
 -1 0.00024749 0.999753
 
-Label '1' means cluster 'different species', '-1' stands for 'same species' cluster. First line '-1 0.000253429 0.999747' indicates that, the first sample is classified to 'same species' with probability 0.9997 and can be classified to 'different species' with a very low probability 0.000253. 
+Label '1' means cluster 'different species', '-1' stands for 'same species' cluster. First line '-1 0.000253429 0.999747' indicates that, the first sample is classified to 'same species' with probability 0.9997 and can be classified to 'different species' with a very low probability 0.000253. If you have true labels for your dataset, you can compare the classification result with true labels to get estimation accuracy.
 
 
