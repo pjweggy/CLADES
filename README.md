@@ -19,8 +19,11 @@ After installation of LIBSVM, make sure that the following commands are accessib
 In our paper, we conducted two groups of extensive simulation to build SVM model, one (All) for data without considering migration and one (AllM) for data with migration. The features of simulated data and trained models are listed under directory model/. The files with same prefix contain the information for the same model. For example, files with prefix 'All' are for simulation with no migration:
 
   -- All.sumstat :features collected from simulation data
+  
   -- All.sumstat.scale :normalized features to range (0, 1)
+  
   -- All.range :normalization parameter for each feature
+  
   -- All.sumstat.scale.model :trained SVM model to delimit two populations
  
  The same for files with prefix 'AllM'.
