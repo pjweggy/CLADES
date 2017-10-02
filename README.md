@@ -89,23 +89,14 @@ Sequence data should have format:
 10 20
 
 a01^A1 GTTTGCAAGAA-ATCATGGA
-
 a02^A1 GTTTGCAAGAA-ATCATGGA
-
 a03^A1 GTTTGCAAGAA-ATCATGGA
-
 a04^A1 GTTTGCAAGAA-ATCATGGA
-
 a05^A1 GTTTGCAAGAA-ATCATGGA
-
 b01^B1 GATTGCTAGAATATC-TGGA
-
 b02^B1 GATTGCTAGAATATC-TGGA
-
 b03^B1 GATTGCTAGAATATC-TGGA
-
 b04^B1 GATTGCTAGAATATC-TGGA
-
 b05^B1 GATTGCTAGAATATC-TGGA
 
 Header contains the information of number of inidviduals, and length of such loci. Sequence data for each individual should be listed after the header line one by one, with format of '<individual id> <sequence data>'. <individual id> should contains a unique ID for such individual with letters and numbers, and delimited with '^', then combined with population ID. For example, 'a01^A1' stands for individual a01 belonging to population A1. Input data allows missing information with '-' to represent. One can use multiple locus sequence data, use an empty line to delimit locus.
