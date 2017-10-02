@@ -29,8 +29,11 @@ In our paper, we conducted two groups of extensive simulation to build SVM model
  The same for files with prefix 'AllM'.
  
 Trained data is simulated with three various parameters:
+
   -- θ :population size parameter, range:(0.0005, 0.02)
+  
   -- 𝜏 :species divergence time, range:(θ/10,θ)
+  
   -- M :migration parameter, M=Nm(N is effective population size, m is migration rate per generation), range:(0,5)
 
 Two models can be used for general analysis for species detetion. If there is no significant gene flow between two populations, we suggest to use model 'All'. Both models can be used for species delimitation. CLADES is not sensitive to three parameters, and it is able to identify two species, especially for hard cases (recent diverged or with a medium level of gene flow).
@@ -38,11 +41,17 @@ Two models can be used for general analysis for species detetion. If there is no
 2. summary statistics
 
 We used 5 summary statistics to represent the data, they are:
+
   -- folded SFS with 3-bin :folded site frequency spectrum
+  
   -- private position
+  
   -- pairwise difference ratio
+  
   -- Fst
+  
   -- shared tract percentage
+  
 For more details and how to compute these summary statistics, please refer to our paper.
 
 3. species delimitation
