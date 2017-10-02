@@ -79,8 +79,6 @@ For example, to analyze sequence data in temp_seq.txt:
 
 ==== Data ====
 
-1. Input data
-
 CLADES uses sequences data for multiple individuals from multiple populations. There is an example input sequence file temp_seq.txt.
 
 Sequence data should have format:
@@ -99,8 +97,13 @@ b03^B1 GATTGCTAGAATATC-TGGA
 b04^B1 GATTGCTAGAATATC-TGGA
 b05^B1 GATTGCTAGAATATC-TGGA
 
-Header contains the information of number of inidviduals, and length of such loci. Sequence data for each individual should be listed after the header line one by one, with format of '<individual id> <sequence data>'. <individual id> should contains a unique ID for such individual with letters and numbers, and delimited with '^', then combined with population ID. For example, 'a01^A1' stands for individual a01 belonging to population A1. Input data allows missing information with '-' to represent. One can use multiple locus sequence data, use an empty line to delimit locus.
-
-
+Header contains the information of number of inidviduals, and length of such loci. Sequence data for each individual should be listed after the header line one by one, with format of '<individual id> <sequence data>'. <individual id> should contains a unique ID for such individual with letters and numbers, and delimited with '^', then combined with population ID. For example, 'a01^A1' stands for individual a01 belonging to population A1. Input data allows missing information with '-' to represent. One can use multiple locus sequence data, use an empty line to delimit two locus.
 
 ==== Output ====
+
+CLADES outputs the best assignment for populations in sequence data. For example, to use either model (All or AllM) to delimit test_seq.txt, CLADES outputs:
+
+The Best Assignment of species clusters are:
+['C1,C2', 'B1,B2', 'D1,D2', 'A1,A2']
+
+
