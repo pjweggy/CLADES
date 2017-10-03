@@ -76,7 +76,7 @@ For example, to analyze sequence data in test_seq.txt:
 
   $ python CLADES.py test ../model/All <path to libsvm commands>
   
-4*. train your own model
+*4. train your own model
 
 With prior knowledge of related populations, one can trained a more specific model as your own classifier. For example, if one has an estimate range of θ, 𝜏 and M, one can generate simulated sequence data for two-species model. For pairwise populations, compute summary statistics and normalize to range (0, 1). Then use 'svm-train' to train your own model.
 
