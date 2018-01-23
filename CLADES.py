@@ -377,8 +377,8 @@ f1.close()
 #model='/Users/pjweggy/Documents/academy/SpecD/code/model2/All'
 #path1='/Users/pjweggy/Downloads/apps/libsvm-3.22/'
 model=sys.argv[2]
-#path1=sys.argv[3]
-path1=''
+path1=sys.argv[3]
+#path1=''
 Res=dict()
 for key in sorted(SS.iterkeys()):
     try:
