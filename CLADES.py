@@ -192,9 +192,15 @@ def Lsubseq(hap,popsize1,popsize2,nsites,snplist):
                         tract.append(nshare)
                         nshare=0
                 else:
-                    if nshare != 0:
-                        tract.append(nshare)
-                        nshare = 0
+                    if k==0:
+                        nshare+=snplist[0]
+                    else:
+                        nshare+=snplist[k]-snplist[k-1]-1
+                    tract.append(nshare)
+                    if k==nsnp-1:
+                        tract.append(nsites-snplist[-1])
+                    nshare = 0
+            #print(tract)
             lsubseq.append(max(tract))
             tract=list()
     Lsubseq=max(lsubseq)
@@ -256,7 +262,7 @@ def Seq2SNP(Allmat):
         if sum(Allmat[:,i]) != 0:
             snplist.append(i)
     if len(snplist)==0:
-        print 'Error Message:Gene has no variant! Please delete this gene or concatenate multiple genes.'
+        print('Error Message:Gene has no variant! Please delete this gene or concatenate multiple genes.')
     AllSNP=np.array(Allmat[:,snplist])
 #    print AllSNP.shape
     return AllSNP,snplist
@@ -354,7 +360,7 @@ nbin=3
 SS=dict()
 
 ##1. Compute Summary Statistics for data
-f1=open(prefix+'_seq.txt','rb')
+f1=open(prefix+'_seq.txt','r')
 
 for line in f1:
     if line[0:2]!='\n':
@@ -377,7 +383,12 @@ f1.close()
 #model='/Users/pjweggy/Documents/academy/SpecD/code/model2/All'
 #path1='/Users/pjweggy/Downloads/apps/libsvm-3.22/'
 model=sys.argv[2]
-path1=sys.argv[3]
+
+if len(sys.argv)>3:
+    path1=sys.argv[3]
+else:
+    path1=''
+
 #path1=''
 Res=dict()
 for key in sorted(SS.iterkeys()):
@@ -390,7 +401,7 @@ for key in sorted(SS.iterkeys()):
     fss.write(SS[key])
     fss.close()
     cmd1='{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1)
-    cmd2='{3}svm-predict -b 1 {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1)
+    cmd2='{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1)
     #print cmd1
     #print cmd2
     Popen(cmd1, shell = True, stdout = PIPE).communicate()
@@ -441,7 +452,7 @@ while coal:
         for j in range(i+1,len(CurC),1):
             NewC=CoalSPN(CurC,CurC[i],CurC[j])
             prob=CompProb(NewC,Res)
-            print NewC,prob
+            print('{0} {1}'.format(NewC,prob))
             if prob>curprob:
                 CurC_temp=NewC
                 curprob=prob
@@ -451,8 +462,8 @@ while coal:
     else:
         coal=0
 
-print 'The Best Assignment of species clusters are:'
-print CurC,curprob
+print('The Best Assignment of species clusters are:')
+print('{0} {1}'.format(CurC,curprob))
 
 
 
