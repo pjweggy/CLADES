@@ -393,12 +393,7 @@ else:
 #path1=''
 Res=dict()
 for key in sorted(SS.keys()):
-    try:
-        os.remove(key+'.sumstat')
-        os.remove(key+'.sumstat.scale')
-    except OSError:
-        pass
-    fss=open(key+'.sumstat','a')
+    fss=open(key+'.sumstat','w')
     fss.write(SS[key])
     fss.close()
     cmd1='{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1)
@@ -415,10 +410,6 @@ for key in sorted(SS.keys()):
     res=np.mean(Out,axis=0)[1:3]
     Res[key]=res
 
-try:
-    os.remove(prefix+'.out')
-except OSError:
-    pass
 fout=open(prefix+'.out','w')
 fout.write('labels +1 -1\n')
 for key in sorted(Res.keys()):
