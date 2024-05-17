@@ -2,6 +2,7 @@ __author__ = 'pjweggy'
 
 import re
 import numpy as np
+from itertools import chain
 #from SumStat import *
 #import math
 import os
@@ -22,12 +23,12 @@ def Process(rawdata,delim,nbin,SS):
         Allmat,snplist=Seq2SNP(Allmat)
         startpoint=GetSP(popsize)
         for i in range(len(popsize)-1):
-            for j in range(i+1,len(popsize),1):
-                pos=range(startpoint[i],(startpoint[i]+popsize[i]),1)+range(startpoint[j],(startpoint[j]+popsize[j]),1)
+            for j in range(i + 1, len(popsize)):
+                pos = list(chain(range(startpoint[i], startpoint[i]+popsize[i]), range(startpoint[j],startpoint[j]+popsize[j])))
                 hap=Allmat[pos,:]
                 sumstat=CollectSS2pop(hap,popsize[i],popsize[j],nbin,nsites,snplist)
                 key=spn[i]+'-'+spn[j]
-                if SS.has_key(key):
+                if key in SS:
                     SS[key]=SS[key]+AddSS(sumstat)
                 else:
                     SS[key]=AddSS(sumstat)
@@ -93,9 +94,9 @@ def SFS_fold(hap,nsites):
     else:
         hap_dim=hap.shape
     if hap_dim[0]%2!=0:
-        sfs=np.zeros((hap_dim[0]+1)/2)
+        sfs=np.zeros((hap_dim[0]+1) // 2)
     else:
-        sfs=np.zeros(hap_dim[0]/2+1)
+        sfs=np.zeros(hap_dim[0] // 2+1)
     for i in range(hap_dim[1]):
         temp=(hap[:,i] == 1).sum()
         if temp <= (hap_dim[0]/2):
@@ -109,7 +110,7 @@ def SFS_fold(hap,nsites):
 def SFS_fold_bin(hap,nbin,nsites):
     sfs=SFS_fold(hap,nsites)
     nlen=sfs.shape[0]
-    window=nlen/nbin
+    window=nlen // nbin
     sfs_bin=np.zeros(nbin)
     for i in range(nbin):
         if i != (nbin-1):
@@ -222,7 +223,7 @@ def Dict2Mat(rawdata,delim):
     speciesinfo=dict()
     template=''
     Allmat=[]
-    for key in sorted(rawdata.iterkeys()):
+    for key in sorted(rawdata.keys()):
         ###process key
         #r=re.compile('([a-d][1-2])([0-9]+)('+delim+')([A-D][1-2])')
         r=re.compile('([A-Za-z]+[0-9]+)('+delim+')([A-Za-z0-9]+)')
@@ -297,7 +298,7 @@ def GetSeq(line):
 
 def GetSPN(Res):
     spn=[]
-    for key in sorted(Res.iterkeys()):
+    for key in sorted(Res.keys()):
         spn1=key.split('-')[0]
         spn2=key.split('-')[1]
         if not (spn1 in spn):
@@ -321,9 +322,9 @@ def ProbSS(splist1,Res):
     else:
         for i in range(len(splist1)-1):
             for j in range(i+1,len(splist1),1):
-                if Res.has_key(splist1[i]+'-'+splist1[j]):
+                if (splist1[i]+'-'+splist1[j]) in Res:
                     prob=prob*Res[splist1[i]+'-'+splist1[j]][1]
-                elif Res.has_key(splist1[j]+'-'+splist1[i]):
+                elif (splist1[j]+'-'+splist1[i]) in Res:
                     prob=prob*Res[splist1[j]+'-'+splist1[i]][1]
     return prob
 
@@ -331,9 +332,9 @@ def ProbDS(splist1,splist2,Res):
     prob=1
     for spn1 in splist1:
         for spn2 in splist2:
-            if Res.has_key(spn1+'-'+spn2):
+            if (spn1+'-'+spn2) in Res:
                 prob=prob*Res[spn1+'-'+spn2][0]
-            elif Res.has_key(spn2+'-'+spn1):
+            elif (spn2+'-'+spn1) in Res:
                 prob=prob*Res[spn2+'-'+spn1][0]
     return prob
 
@@ -391,14 +392,14 @@ else:
 
 #path1=''
 Res=dict()
-for key in sorted(SS.iterkeys()):
+for key in sorted(SS.keys()):
     try:
         os.remove(key+'.sumstat')
         os.remove(key+'.sumstat.scale')
     except OSError:
         pass
     fss=open(key+'.sumstat','ab')
-    fss.write(SS[key])
+    fss.write(SS[key].encode('utf-8'))
     fss.close()
     cmd1='{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1)
     cmd2='{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1)
@@ -418,9 +419,9 @@ try:
     os.remove(prefix+'.out')
 except OSError:
     pass
-fout=open(prefix+'.out','wb')
+fout=open(prefix+'.out','w')
 fout.write('labels +1 -1\n')
-for key in sorted(Res.iterkeys()):
+for key in sorted(Res.keys()):
     fout.write(key+' '+str(("%.4f" % Res[key][0]))+' '+str(("%.4f" % Res[key][1]))+'\n')
 fout.close()
 
@@ -464,10 +465,3 @@ while coal:
 
 print('The Best Assignment of species clusters are:')
 print('{0} {1}'.format(CurC,curprob))
-
-
-
-
-
-
-
