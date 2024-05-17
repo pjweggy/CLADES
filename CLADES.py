@@ -398,8 +398,8 @@ for key in sorted(SS.keys()):
         os.remove(key+'.sumstat.scale')
     except OSError:
         pass
-    fss=open(key+'.sumstat','ab')
-    fss.write(SS[key].encode('utf-8'))
+    fss=open(key+'.sumstat','a')
+    fss.write(SS[key])
     fss.close()
     cmd1='{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1)
     cmd2='{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1)
