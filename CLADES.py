@@ -390,29 +390,33 @@ if len(sys.argv)>3:
 else:
     path1=''
 
+output_dir = "output/"
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
 #path1=''
 Res=dict()
 for key in sorted(SS.keys()):
-    fss=open(key+'.sumstat','w')
+    fss=open(output_dir + key+'.sumstat','w')
     fss.write(SS[key])
     fss.close()
 
     subprocess.run(
-        '{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1),
+        '{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,output_dir + key+'.sumstat',path1),
         shell = True,
         stdout = subprocess.PIPE
     )
     subprocess.run(
-        '{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1),
+        '{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,output_dir + key+'.sumstat',output_dir + key,path1),
         shell = True,
         stdout = subprocess.PIPE
     )
 
-    Out=np.loadtxt(key+'.out',comments='labels')
+    Out=np.loadtxt(output_dir + key+'.out',comments='labels')
     res=np.mean(Out,axis=0)[1:3]
     Res[key]=res
 
-fout=open(prefix+'.out','w')
+fout=open(output_dir + prefix+'.out','w')
 fout.write('labels +1 -1\n')
 for key in sorted(Res.keys()):
     fout.write(key+' '+str(("%.4f" % Res[key][0]))+' '+str(("%.4f" % Res[key][1]))+'\n')
