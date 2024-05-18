@@ -6,7 +6,7 @@ from itertools import chain
 #from SumStat import *
 #import math
 import os
-from subprocess import *
+import subprocess
 import sys
 
 def RecogIndv(line,delim):
@@ -396,16 +396,18 @@ for key in sorted(SS.keys()):
     fss=open(key+'.sumstat','w')
     fss.write(SS[key])
     fss.close()
-    cmd1='{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1)
-    cmd2='{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1)
-    #print cmd1
-    #print cmd2
-    Popen(cmd1, shell = True, stdout = PIPE).communicate()
-    while not os.path.exists(key+'.sumstat.scale'):
-        continue
-    Popen(cmd2, shell = True, stdout = PIPE).communicate()
-    while not os.path.exists(key+'.out'):
-        continue
+
+    subprocess.run(
+        '{2}svm-scale -r {0}.range {1} > {1}.scale'.format(model,key+'.sumstat',path1),
+        shell = True,
+        stdout = subprocess.PIPE
+    )
+    subprocess.run(
+        '{3}svm-predict -b 1 -q {1}.scale {0}.sumstat.scale.model {2}.out'.format(model,key+'.sumstat',key,path1),
+        shell = True,
+        stdout = subprocess.PIPE
+    )
+
     Out=np.loadtxt(key+'.out',comments='labels')
     res=np.mean(Out,axis=0)[1:3]
     Res[key]=res
