@@ -411,19 +411,19 @@ if __name__ == "__main__":
 
     Res = dict()
     for key in sorted(SS):
-        sumstat_filepath = Path(output_dir) / f"{key}.sumstat"
+        sumstat_filepath = output_dir / f"{key}.sumstat"
         with sumstat_filepath.open("w") as f:
             f.write(SS[key])
 
         subprocess.run(
-            f"svm-scale -r {model}.range {str(sumstat_filepath)} > {str(sumstat_filepath)}.scale",
+            f"svm-scale -r {model}.range {sumstat_filepath} > {sumstat_filepath}.scale",
             shell = True,
             stdout = subprocess.PIPE
         )
 
-        key_out_filepath = Path(output_dir) / f"{key}.out"
+        key_out_filepath = output_dir / f"{key}.out"
         subprocess.run(
-            f"svm-predict -b 1 -q {str(sumstat_filepath)}.scale {model}.sumstat.scale.model {str(key_out_filepath)}",
+            f"svm-predict -b 1 -q {sumstat_filepath}.scale {model}.sumstat.scale.model {key_out_filepath}",
             shell = True,
             stdout = subprocess.PIPE
         )
@@ -432,7 +432,7 @@ if __name__ == "__main__":
         res = np.mean(Out, axis = 0)[1:3]
         Res[key] = res
 
-    seq_out_filepath = Path(output_dir) / f"{prefix}.out"
+    seq_out_filepath = output_dir / f"{prefix}.out"
     with seq_out_filepath.open("w") as f:
         f.write("labels +1 -1\n")
         for key in sorted(Res):
