@@ -6,6 +6,7 @@ from itertools import chain
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 def RecogIndv(line, delim):
     pattern = fr"[A-Za-z]+[0-9]+{delim}[A-Za-z0-9]+"
@@ -375,111 +376,91 @@ def CompProb(CurC, Res):
 
     return prob
 
-prefix = sys.argv[1]
+if __name__ == "__main__":
+    prefix = sys.argv[1]
 
-delim = '\^'
-rawdata = dict()
-nbin = 3
-SS = dict()
+    delim = '\^'
+    rawdata = dict()
+    nbin = 3
+    SS = dict()
 
-##1. Compute Summary Statistics for data
-with open(prefix + "_seq.txt") as f:
-    for line in f:
-        if line[0:2] != "\n":
-            header = line.split()[0]
+    ##1. Compute Summary Statistics for data
+    with open(prefix + "_seq.txt") as f:
+        for line in f:
+            if line[0:2] != "\n":
+                header = line.split()[0]
+            else:
+                header = ""
+
+            indvName = RecogIndv(header, delim)
+            if len(indvName) > 0:
+                seq = GetSeq(line)
+                rawdata[indvName] = seq
+            else:
+                SS = Process(rawdata, delim, nbin, SS)
+                rawdata.clear()
+
+        SS = Process(rawdata, delim, nbin, SS)
+        rawdata.clear()
+
+    ##2.Species delimitation for pairwise pops
+    model = sys.argv[2]
+
+    output_dir = Path("output/")
+    output_dir.mkdir(parents = True, exist_ok = True)
+
+    Res = dict()
+    for key in sorted(SS):
+        sumstat_filepath = Path(output_dir) / f"{key}.sumstat"
+        with sumstat_filepath.open("w") as f:
+            f.write(SS[key])
+
+        subprocess.run(
+            f"svm-scale -r {model}.range {str(sumstat_filepath)} > {str(sumstat_filepath)}.scale",
+            shell = True,
+            stdout = subprocess.PIPE
+        )
+
+        key_out_filepath = Path(output_dir) / f"{key}.out"
+        subprocess.run(
+            f"svm-predict -b 1 -q {str(sumstat_filepath)}.scale {model}.sumstat.scale.model {str(key_out_filepath)}",
+            shell = True,
+            stdout = subprocess.PIPE
+        )
+
+        Out = np.loadtxt(key_out_filepath, comments = "labels")
+        res = np.mean(Out, axis = 0)[1:3]
+        Res[key] = res
+
+    seq_out_filepath = Path(output_dir) / f"{prefix}.out"
+    with seq_out_filepath.open("w") as f:
+        f.write("labels +1 -1\n")
+        for key in sorted(Res):
+            f.write(f"{key} {Res[key][0]:.4f} {Res[key][1]:.4f}\n")
+
+    ##3.Compute probability of best assignment
+    spn = GetSPN(Res)
+    CurC = spn
+    curprob = CompProb(CurC, Res)
+    coal = 1
+
+    while coal:
+        coalc = 0
+        for i in range(len(CurC) - 1):
+            for j in range(i + 1, len(CurC)):
+                NewC = CoalSPN(CurC, CurC[i], CurC[j])
+                prob = CompProb(NewC, Res)
+                print(f"{NewC} {prob}")
+
+                if prob > curprob:
+                    CurC_temp = NewC
+                    curprob = prob
+                    coalc += 1
+
+        if coalc > 0:
+            CurC = CurC_temp
         else:
-            header=""
+            coal = 0
 
-        indvName = RecogIndv(header, delim)
-        if len(indvName) > 0:
-            seq = GetSeq(line)
-            rawdata[indvName] = seq
-        else:
-            SS = Process(rawdata, delim, nbin, SS)
-            rawdata.clear()
-
-    SS = Process(rawdata, delim, nbin, SS)
-    rawdata.clear()
-
-##2.Species delimitation for pairwise pops
-#model='/Users/pjweggy/Documents/academy/SpecD/code/model2/All'
-#path1='/Users/pjweggy/Downloads/apps/libsvm-3.22/'
-model = sys.argv[2]
-
-if len(sys.argv) > 3:
-    path1 = sys.argv[3]
-else:
-    path1 = ""
-
-output_dir = "output/"
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
-
-Res = dict()
-for key in sorted(SS):
-    sumstat_filepath = os.path.join(output_dir, f"{key}.sumstat")
-    with open(sumstat_filepath, "w") as f:
-        f.write(SS[key])
-
-    subprocess.run(
-        f"svm-scale -r {model}.range {sumstat_filepath} > {sumstat_filepath}.scale",
-        shell = True,
-        stdout = subprocess.PIPE
-    )
-
-    key_out_filepath = os.path.join(output_dir, f"{key}.out")
-    subprocess.run(
-        f"svm-predict -b 1 -q {sumstat_filepath}.scale {model}.sumstat.scale.model {key_out_filepath}",
-        shell = True,
-        stdout = subprocess.PIPE
-    )
-
-    Out = np.loadtxt(key_out_filepath, comments = "labels")
-    res = np.mean(Out, axis=0)[1:3]
-    Res[key] = res
-
-seq_out_filepath = os.path.join(output_dir, f"{prefix}.out")
-with open(seq_out_filepath, "w") as f:
-    f.write("labels +1 -1\n")
-    for key in sorted(Res):
-        f.write(f"{key} {Res[key][0]:.4f} {Res[key][1]:.4f}\n")
-
-##3.Compute probability of best assignment
-'''
-f=open('test.out','rb')
-Res=dict()
-for line in f:
-    if line[0:5]=='label':
-        continue
-    else:
-        key=line.split()[0]
-        spn=[float(line.split()[1]),float(line.split()[2])]
-        Res[key]=spn
-f.close()
-'''
-
-spn = GetSPN(Res)
-CurC = spn
-curprob = CompProb(CurC, Res)
-coal = 1
-
-while coal:
-    coalc = 0
-    for i in range(len(CurC) - 1):
-        for j in range(i + 1, len(CurC)):
-            NewC = CoalSPN(CurC, CurC[i], CurC[j])
-            prob = CompProb(NewC, Res)
-            print(f"{NewC} {prob}")
-
-            if prob > curprob:
-                CurC_temp = NewC
-                curprob = prob
-                coalc += 1
-
-    if coalc > 0:
-        CurC = CurC_temp
-    else:
-        coal = 0
-
-print("\nThe Best Assignment of species clusters are:")
-print(f"{CurC} {curprob}")
+    print("\nThe Best Assignment of species clusters are:")
+    print(f"{CurC} {curprob}")
