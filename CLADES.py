@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+import argparse
 
 def RecogIndv(line, delim):
     pattern = fr"[A-Za-z]+[0-9]+{delim}[A-Za-z0-9]+"
@@ -377,7 +378,27 @@ def CompProb(CurC, Res):
     return prob
 
 if __name__ == "__main__":
-    prefix = sys.argv[1]
+    parser = argparse.ArgumentParser(description = "CLADES (CLAssification based DElimitation of Species)")
+    
+    # Positional arguments
+    parser.add_argument("seq_data", type = Path, help = "The path to the sequence data file to be processed.")
+    
+    # Optional argumentS
+    parser.add_argument("-p", "--model_path", type = Path, default = Path("model/"), help = "Path to model.")
+    parser.add_argument("-n", "--model_name", type = str, default = "All", help = "Name of the model.")
+
+    args = parser.parse_args()
+
+    if not args.seq_data.is_file():
+        print(f"The sequence data '{args.seq_data}' does not exist.")
+        sys.exit(1)
+
+    if not args.model_path.is_dir():
+        print(f"The model path '{args.model_path}' does not exist.")
+        sys.exit(1)
+
+    seq_data = args.seq_data
+    model = args.model_path / args.model_name
 
     delim = '\^'
     rawdata = dict()
@@ -385,7 +406,7 @@ if __name__ == "__main__":
     SS = dict()
 
     ##1. Compute Summary Statistics for data
-    with open(prefix + "_seq.txt") as f:
+    with seq_data.open() as f:
         for line in f:
             if line[0:2] != "\n":
                 header = line.split()[0]
@@ -404,8 +425,6 @@ if __name__ == "__main__":
         rawdata.clear()
 
     ##2.Species delimitation for pairwise pops
-    model = sys.argv[2]
-
     output_dir = Path("output/")
     output_dir.mkdir(parents = True, exist_ok = True)
 
@@ -432,7 +451,7 @@ if __name__ == "__main__":
         res = np.mean(Out, axis = 0)[1:3]
         Res[key] = res
 
-    seq_out_filepath = output_dir / f"{prefix}.out"
+    seq_out_filepath = output_dir / f"{seq_data.name}.out"
     with seq_out_filepath.open("w") as f:
         f.write("labels +1 -1\n")
         for key in sorted(Res):
