@@ -399,6 +399,8 @@ if __name__ == "__main__":
 
     seq_data = args.seq_data
     model = args.model_path / args.model_name
+    output_dir = seq_data.parent / "output/"
+    output_dir.mkdir(parents = True, exist_ok = True)
 
     delim = '\^'
     rawdata = dict()
@@ -425,9 +427,6 @@ if __name__ == "__main__":
         rawdata.clear()
 
     ##2.Species delimitation for pairwise pops
-    output_dir = Path("output/")
-    output_dir.mkdir(parents = True, exist_ok = True)
-
     Res = dict()
     for key in sorted(SS):
         sumstat_filepath = output_dir / f"{key}.sumstat"
