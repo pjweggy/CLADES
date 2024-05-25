@@ -9,6 +9,122 @@ import sys
 from pathlib import Path
 import argparse
 
+__all__ = ["compute_summary_statistics", "species_delimitation", "compute_best_assignment"]
+
+def compute_summary_statistics(seq_data, nbin = 3, delim = '\^'):
+    """
+    Compute summary statistics for sequence data.
+
+    Args:
+        seq_data: Sequence data input file.
+        delim: A delimiter used for the header.
+        nbin: Number of bins to collapse the folded-SFS.
+
+    Returns:
+        Dictionary containing summary statistics.
+    """
+    SS = dict()
+    rawdata = dict()
+
+    with seq_data.open() as f:
+        for line in f:
+            if line[0:2] != "\n":
+                header = line.split()[0]
+            else:
+                header = ""
+
+            indvName = RecogIndv(header, delim)
+            if len(indvName) > 0:
+                seq = GetSeq(line)
+                rawdata[indvName] = seq
+            else:
+                SS = Process(rawdata, delim, nbin, SS)
+                rawdata.clear()
+
+        SS = Process(rawdata, delim, nbin, SS)
+        rawdata.clear()
+
+    return SS
+
+def species_delimitation(SS, output_dir, model):
+    """
+    Perform species delimitation for pairwise populations.
+
+    Args:
+        SS: Summary statistics.
+        output_dir: Directory where output files will be saved.
+        model: Path to the model used for scaling and prediction.
+
+    Returns:
+        Dictionary with results of species delimitation.
+    """
+    Res = dict()
+    for key in sorted(SS):
+        sumstat_filepath = output_dir / f"{key}.sumstat"
+        with sumstat_filepath.open("w") as f:
+            f.write(SS[key])
+
+        subprocess.run(
+            f"svm-scale -r {model}.range {sumstat_filepath} > {sumstat_filepath}.scale",
+            shell = True,
+            stdout = subprocess.PIPE
+        )
+
+        key_out_filepath = output_dir / f"{key}.out"
+        subprocess.run(
+            f"svm-predict -b 1 -q {sumstat_filepath}.scale {model}.sumstat.scale.model {key_out_filepath}",
+            shell = True,
+            stdout = subprocess.PIPE
+        )
+
+        Out = np.loadtxt(key_out_filepath, comments = "labels")
+        res = np.mean(Out, axis = 0)[1:3]
+        Res[key] = res
+
+    seq_out_filepath = output_dir / f"{seq_data.name}.out"
+    with seq_out_filepath.open("w") as f:
+        f.write("labels +1 -1\n")
+        for key in sorted(Res):
+            f.write(f"{key} {Res[key][0]:.4f} {Res[key][1]:.4f}\n")
+
+    return Res
+
+def compute_best_assignment(Res):
+    """
+    Compute the probability of the best assignment of species clusters.
+
+    Args:
+        Res: Dictionary with results of species delimitation.
+
+    Returns:
+        List of species clusters, the best assignment of species clusters, and its probability.
+    """
+    clusters = []
+    cluster = GetSPN(Res)
+    prob = CompProb(cluster, Res)
+    best_cluster = None
+    coal = 1
+
+    while coal:
+        coalc = 0
+        for i in range(len(cluster) - 1):
+            for j in range(i + 1, len(cluster)):
+                cur_cluster = CoalSPN(cluster, cluster[i], cluster[j])
+                cur_prob = CompProb(cur_cluster, Res)
+                clusters.append(f"{cur_cluster} {cur_prob}")
+
+                if cur_prob > prob:
+                    best_cluster = cur_cluster
+                    prob = cur_prob
+                    coalc += 1
+
+        if coalc > 0:
+            cluster = best_cluster
+        else:
+            coal = 0
+
+    return clusters, cluster, prob
+
 def RecogIndv(line, delim):
     pattern = fr"[A-Za-z]+[0-9]+{delim}[A-Za-z0-9]+"
     return line if re.match(pattern, line) else ""
@@ -402,83 +518,16 @@ if __name__ == "__main__":
     output_dir = seq_data.parent / "output/"
     output_dir.mkdir(parents = True, exist_ok = True)
 
-    delim = '\^'
-    rawdata = dict()
-    nbin = 3
-    SS = dict()
+    # Step 1
+    SS = compute_summary_statistics(seq_data)
 
-    ##1. Compute Summary Statistics for data
-    with seq_data.open() as f:
-        for line in f:
-            if line[0:2] != "\n":
-                header = line.split()[0]
-            else:
-                header = ""
+    # Step 2
+    Res = species_delimitation(SS, output_dir, model)
 
-            indvName = RecogIndv(header, delim)
-            if len(indvName) > 0:
-                seq = GetSeq(line)
-                rawdata[indvName] = seq
-            else:
-                SS = Process(rawdata, delim, nbin, SS)
-                rawdata.clear()
-
-        SS = Process(rawdata, delim, nbin, SS)
-        rawdata.clear()
-
-    ##2.Species delimitation for pairwise pops
-    Res = dict()
-    for key in sorted(SS):
-        sumstat_filepath = output_dir / f"{key}.sumstat"
-        with sumstat_filepath.open("w") as f:
-            f.write(SS[key])
-
-        subprocess.run(
-            f"svm-scale -r {model}.range {sumstat_filepath} > {sumstat_filepath}.scale",
-            shell = True,
-            stdout = subprocess.PIPE
-        )
-
-        key_out_filepath = output_dir / f"{key}.out"
-        subprocess.run(
-            f"svm-predict -b 1 -q {sumstat_filepath}.scale {model}.sumstat.scale.model {key_out_filepath}",
-            shell = True,
-            stdout = subprocess.PIPE
-        )
-
-        Out = np.loadtxt(key_out_filepath, comments = "labels")
-        res = np.mean(Out, axis = 0)[1:3]
-        Res[key] = res
-
-    seq_out_filepath = output_dir / f"{seq_data.name}.out"
-    with seq_out_filepath.open("w") as f:
-        f.write("labels +1 -1\n")
-        for key in sorted(Res):
-            f.write(f"{key} {Res[key][0]:.4f} {Res[key][1]:.4f}\n")
-
-    ##3.Compute probability of best assignment
-    spn = GetSPN(Res)
-    CurC = spn
-    curprob = CompProb(CurC, Res)
-    coal = 1
-
-    while coal:
-        coalc = 0
-        for i in range(len(CurC) - 1):
-            for j in range(i + 1, len(CurC)):
-                NewC = CoalSPN(CurC, CurC[i], CurC[j])
-                prob = CompProb(NewC, Res)
-                print(f"{NewC} {prob}")
-
-                if prob > curprob:
-                    CurC_temp = NewC
-                    curprob = prob
-                    coalc += 1
-
-        if coalc > 0:
-            CurC = CurC_temp
-        else:
-            coal = 0
+    # Step 3
+    clusters, cluster, prob = compute_best_assignment(Res)
+    for c in clusters:
+        print(c)
 
     print("\nThe Best Assignment of species clusters are:")
-    print(f"{CurC} {curprob}")
+    print(f"{cluster} {prob}")
