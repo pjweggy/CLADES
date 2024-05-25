@@ -252,8 +252,9 @@ def PairDiff(hap):
             pairdiff.append(pd(hap[i,:],hap[j,:]))
     #print pairdiff
     #pairdiff_reg=[x*(float(1.0)/hap_dim[1]) for x in pairdiff]  ##regularize pairwise difference
-    pdmean = np.mean(pairdiff)
-    if len(pairdiff) == 0:
+    if len(pairdiff) > 0:
+        pdmean = np.mean(pairdiff)
+    else:
         pdmean = 0.0
 
     #pdstd=std(pairdiff_reg)
