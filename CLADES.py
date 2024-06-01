@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 import argparse
 
-__all__ = ["compute_summary_statistics", "species_delimitation", "compute_best_assignment"]
+__all__ = ["compute_summary_statistics", "species_delimitation", "compute_best_assignment", "get_species_names", "get_class_labels"]
 
 def compute_summary_statistics(seq_data, nbin = 3, delim = '\^'):
     """
@@ -124,6 +124,46 @@ def compute_best_assignment(Res):
             coal = 0
 
     return clusters, cluster, prob
+
+def get_species_names(SS):
+    """
+    Get the species names from summary statistics.
+
+    Args:
+        SS: Summary statistics.
+
+    Returns:
+        A list containing the species names.
+    """
+    species_names = set()
+
+    for key in SS:
+        specie1, specie2 = key.split("-")
+        species_names.add(specie1)
+        species_names.add(specie2)
+
+    return sorted(list(species_names))
+
+def get_class_labels(species_names):
+    """
+    Get the class labels from species names.
+
+    Args:
+        species_names: A list containing the species names.
+
+    Returns:
+        A list containing the class labels.
+    """
+    class_labels = list()
+
+    for i in range(len(species_names) - 1):
+        for j in range(i + 1, len(species_names)):
+            if species_names[i][0] == species_names[j][0]:
+                class_labels.append("-1")
+            else:
+                class_labels.append("+1")
+
+    return class_labels
 
 def RecogIndv(line, delim):
     pattern = fr"[A-Za-z]+[0-9]+{delim}[A-Za-z0-9]+"
@@ -376,14 +416,6 @@ def Dict2Mat(rawdata, delim):
             Allmat = np.vstack((Allmat, Gen01fromSeq(rawdata[key], template)))
 
     popsize = [speciesinfo[spn] for spn in speciesname]
-
-#    classlabel=list()
-#    for i in range(len(speciesname)-1):
-#        for j in range(i+1,len(speciesname),1):
-#            if speciesname[i][0]==speciesname[j][0]:
-#                classlabel.append('-1')
-#            else:
-#                classlabel.append('+1')
 
     return popsize, Allmat, speciesname
 
