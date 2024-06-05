@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 import argparse
 
-__all__ = ["compute_summary_statistics", "species_delimitation", "compute_best_assignment", "get_species_names", "get_class_labels"]
+__all__ = ["compute_summary_statistics", "species_delimitation", "compute_best_assignment", "get_species_names", "get_class_labels", "write_sumstat", "write_total_sumstat"]
 
 def compute_summary_statistics(seq_data, nbin = 3, delim = '\^'):
     """
@@ -61,8 +61,6 @@ def species_delimitation(SS, output_dir, model):
     Res = dict()
     for key in sorted(SS):
         sumstat_filepath = output_dir / f"{key}.sumstat"
-        with sumstat_filepath.open("w") as f:
-            f.write(SS[key])
 
         subprocess.run(
             f"svm-scale -r {model}.range {sumstat_filepath} > {sumstat_filepath}.scale",
@@ -165,6 +163,43 @@ def get_class_labels(species_names):
 
     return class_labels
 
+def write_sumstat(SS, output_dir):
+    """
+    Writes summary statistics to a file named {key}.sumstat in the specified output directory.
+    
+    Args:
+        SS: Summary statistics.
+        output_dir: Directory where the summary statistics file will be saved.
+    """
+    for key in sorted(SS):
+        sumstat_filepath = output_dir / f"{key}.sumstat"
+        with sumstat_filepath.open("w") as f:
+            f.write(SS[key])
+
+def write_total_sumstat(SS, output_dir):
+    """
+    Writes all summary statistics to a single file named total.sumstat in the specified output directory.
+    
+    Args:
+        SS: Summary statistics.
+        output_dir: Directory where the total summary statistics file will be saved.
+    """
+    species_names = get_species_names(SS)
+    class_labels = get_class_labels(species_names)
+
+    pairwise_sumstats = list()
+    for key in sorted(SS):
+        sumstats = [sumstat for sumstat in SS[key].split('\n') if sumstat]
+        pairwise_sumstats.append(sumstats)
+
+    total_sumstats = list(map(list, zip(*pairwise_sumstats)))
+
+    total_sumstat_filepath = output_dir / "total.sumstat"
+    with total_sumstat_filepath.open("w") as f:
+        for group in total_sumstats:
+            for i, sumstat in enumerate(group):
+                f.write(f"{class_labels[i]} {sumstat}\n")
+
 def RecogIndv(line, delim):
     pattern = fr"[A-Za-z]+[0-9]+{delim}[A-Za-z0-9]+"
     return line if re.match(pattern, line) else ""
@@ -176,7 +211,7 @@ def Process(rawdata, delim, nbin, SS):
         Allmat, snplist = Seq2SNP(Allmat)
         startpoint = GetSP(popsize)
 
-        for i in range(len(popsize)-1):
+        for i in range(len(popsize) - 1):
             for j in range(i + 1, len(popsize)):
                 pos = list(chain(range(startpoint[i], startpoint[i] + popsize[i]), range(startpoint[j], startpoint[j] + popsize[j])))
                 hap = Allmat[pos,:]
@@ -189,7 +224,6 @@ def Process(rawdata, delim, nbin, SS):
                     SS[key] = AddSS(sumstat)
 
     return SS
-        #WriteSS(fout,sumstat1,classlabel)
 
 def AddSS(sumstat):
     s = ""
@@ -199,18 +233,6 @@ def AddSS(sumstat):
     s += "\n"
 
     return s
-
-# def WriteSS(fout, sumstat, classlabel):
-#     nsam, nft = sumstat.shape
-#
-#     for i in range(nsam):
-#         s = f"{classlabel[i]} "
-#
-#         for j in range(nft):
-#             s += f"{j + 1}:{sumstat[i, j]:.6f} "
-#         s += "\n"
-#
-#         fout.write(s)
 
 def CollectSS2pop(hap, popsize1, popsize2, nbin, nsites, snplist):
     hap1 = hap[0:popsize1,:]
@@ -535,6 +557,8 @@ if __name__ == "__main__":
     # Optional argumentS
     parser.add_argument("-p", "--model_path", type = Path, default = Path("model/"), help = "Path to model.")
     parser.add_argument("-n", "--model_name", type = str, default = "All", help = "Name of the model.")
+    parser.add_argument("-t", "--total_sumstat", action = "store_true", help = "Outputs a single file containing all of the summary statistics on top of pairwise sumstat.")
+    parser.add_argument("-T", "--only_total_sumstat", action = "store_true", help = "Only outputs a single file containing all of the summary statistics. Does not output pairwise sumstat.")
 
     args = parser.parse_args()
 
@@ -555,9 +579,17 @@ if __name__ == "__main__":
     SS = compute_summary_statistics(seq_data)
 
     # Step 2
-    Res = species_delimitation(SS, output_dir, model)
+    if args.total_sumstat or args.only_total_sumstat:
+        write_total_sumstat(SS, output_dir)
+        if args.only_total_sumstat:
+            sys.exit(0)
+
+    write_sumstat(SS, output_dir)
 
     # Step 3
+    Res = species_delimitation(SS, output_dir, model)
+
+    # Step 4
     clusters, cluster, prob = compute_best_assignment(Res)
     for c in clusters:
         print(c)
