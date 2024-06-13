@@ -76,6 +76,9 @@ def species_delimitation(SS, output_dir, model):
         )
 
         Out = np.loadtxt(key_out_filepath, comments = "labels")
+        if len(Out.shape) == 1:
+            Out = Out.reshape(1, Out.shape[0])
+
         res = np.mean(Out, axis = 0)[1:3]
         Res[key] = res
 
@@ -207,8 +210,11 @@ def RecogIndv(line, delim):
 def Process(rawdata, delim, nbin, SS):
     if len(rawdata) != 0:
         popsize, Allmat, spn = Dict2Mat(rawdata, delim)
+        if isinstance(Allmat, list):
+            print("Please have at least 2 individuals per locus.")
+            sys.exit(1)
         nsites = Allmat.shape[1]
-        Allmat, snplist = Seq2SNP(Allmat)
+        Allmat, snplist = Seq2SNP(Allmat, rawdata)
         startpoint = GetSP(popsize)
 
         for i in range(len(popsize) - 1):
@@ -441,12 +447,14 @@ def Dict2Mat(rawdata, delim):
 
     return popsize, Allmat, speciesname
 
-def Seq2SNP(Allmat):
+def Seq2SNP(Allmat, rawdata):
     nr, nc = Allmat.shape
     snplist = [i for i in range(nc) if any(Allmat[:, i])]
 
     if len(snplist) == 0:
+        print(rawdata)
         print("Error Message:Gene has no variant! Please delete this gene or concatenate multiple genes.")
+        sys.exit(1)
 
     AllSNP = np.array(Allmat[:,snplist])
 #    print AllSNP.shape
