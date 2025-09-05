@@ -613,7 +613,11 @@ if __name__ == "__main__":
 
     seq_data = args.seq_data
     model = args.model_path / args.model_name
-    output_dir = seq_data.parent / "output/"
+
+    seq_data_with_ext = os.path.basename(seq_data)
+    seq_data_without_ext = os.path.splitext(seq_data_with_ext)[0]
+
+    output_dir = seq_data.parent / f"{seq_data_without_ext}_output/"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Step 1
