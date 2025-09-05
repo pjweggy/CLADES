@@ -653,7 +653,8 @@ if __name__ == "__main__":
     seq_data = args.seq_data
     model = args.model_path / args.model_name
 
-    libsvm_path = args.libsvm_path
+    if args.libsvm_path != Path(""):
+        libsvm_path = args.libsvm_path
 
     seq_data_with_ext = os.path.basename(seq_data)
     seq_data_without_ext = os.path.splitext(seq_data_with_ext)[0]
