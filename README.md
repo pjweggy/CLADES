@@ -35,7 +35,7 @@ For more details and how to compute these summary statistics, please refer to ou
 ## Prerequisites
 * [Python 3](https://www.python.org/downloads/)
 * [libsvm](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)
-  * Ensure that the following commands are accessible: `svm-predict`, `svm-scale`, `svm-train`
+  * Add it to your PATH, and ensure that the following commands are accessible: `svm-predict`, `svm-scale`, `svm-train`
 
 ## Usage
 ```
