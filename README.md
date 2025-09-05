@@ -127,5 +127,5 @@ labels 1 -1
 
 Label '1' means cluster 'different species', '-1' stands for 'same species' cluster. First line '-1 0.000253429 0.999747' indicates that, the first sample is classified to 'same species' with probability 0.9997 and can be classified to 'different species' with a very low probability 0.000253. If you have true labels for your dataset, you can compare the classification result with true labels to get estimation accuracy.
 
-## Train Your Own Modeltrain Your Own Model
-With prior knowledge of related populations, one can trained a more specific model as your own classifier. For example, if one has an estimate range of θ, 𝜏 and M, one can generate simulated sequence data for two-species model. For pairwise populations, compute summary statistics and normalize to range (0, 1). Then use 'svm-train' to train your own model.
+## Train Your Own Model
+With prior knowledge of related populations, one can trained a more specific model as your own classifier. For example, if one has an estimate range of θ, 𝜏 and M, one can generate simulated sequence data for two-species model. For pairwise populations, compute summary statistics and normalize to range (0, 1). Then use `svm-train` to train your own model.
