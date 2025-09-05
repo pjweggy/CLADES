@@ -16,6 +16,8 @@ __all__ = [
     "get_class_labels", "write_sumstat", "write_total_sumstat"
 ]
 
+libsvm_path = ""
+
 
 def compute_summary_statistics(seq_data, nbin=3, delim=r'\^'):
     """
@@ -66,20 +68,38 @@ def species_delimitation(SS, output_dir, model):
         Dictionary with results of species delimitation.
     """
     Res = dict()
+
+    svm_scale_cmd = os.path.join(libsvm_path, "svm-scale")
+    svm_predict_cmd = os.path.join(libsvm_path, "svm-predict")
+
     for key in sorted(SS):
         sumstat_filepath = output_dir / f"{key}.sumstat"
 
-        subprocess.run(
-            f"svm-scale -r {model}.range {sumstat_filepath} > {sumstat_filepath}.scale",
-            shell=True,
-            stdout=subprocess.PIPE
-        )
+        with open(f"{sumstat_filepath}.scale", "w") as out:
+            subprocess.run(
+                [
+                    svm_scale_cmd,
+                    "-r", f"{model}.range",
+                    sumstat_filepath
+                ],
+                stdout=out,
+                stderr=subprocess.PIPE,
+                check=True
+            )
 
         key_out_filepath = output_dir / f"{key}.out"
+
         subprocess.run(
-            f"svm-predict -b 1 -q {sumstat_filepath}.scale {model}.sumstat.scale.model {key_out_filepath}",
-            shell=True,
-            stdout=subprocess.PIPE
+            [
+                svm_predict_cmd,
+                "-b", "1",
+                "-q",
+                f"{sumstat_filepath}.scale",
+                f"{model}.sumstat.scale.model",
+                str(key_out_filepath)
+            ],
+            stderr=subprocess.PIPE,
+            check=True
         )
 
         Out = np.loadtxt(key_out_filepath, comments="labels")
@@ -603,6 +623,9 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--model_name", type=str,
                         default="All",
                         help="Name of the model. Defaults to `All`")
+    parser.add_argument("-l", "--libsvm_path", type=Path,
+                        default="",
+                        help="Path to LIBSVM.")
     parser.add_argument("-t", "--total_sumstat", action="store_true",
                         help="Outputs a single file containing all of the summary statistics on top of pairwise sumstat.")
     parser.add_argument("-T", "--only_total_sumstat", action="store_true",
@@ -618,16 +641,19 @@ if __name__ == "__main__":
         print(f"The model path '{args.model_path}' does not exist.")
         sys.exit(1)
 
-    if not shutil.which("svm-predict") or not shutil.which("svm-scale"):
+    if args.libsvm_path == Path("") and not (shutil.which("svm-predict") and shutil.which("svm-scale")):
         print(
             "Please install LIBSVM and add it to your PATH, "
             "so that `svm-predict` and `svm-scale` are accessible.\n"
+            f"Or specify the path to libsvm: `python {sys.argv[0]} -l path/to/libsvm {' '.join(sys.argv[1:])}`\n"
             "You can download it here: https://www.csie.ntu.edu.tw/~cjlin/libsvm/"
         )
         sys.exit(1)
 
     seq_data = args.seq_data
     model = args.model_path / args.model_name
+
+    libsvm_path = args.libsvm_path
 
     seq_data_with_ext = os.path.basename(seq_data)
     seq_data_without_ext = os.path.splitext(seq_data_with_ext)[0]
