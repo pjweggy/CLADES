@@ -47,9 +47,9 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -p, --model_path MODEL_PATH
-                        Path to model.
+                        Path to model. Defaults to `model/` being in the same directory as `CLADES.py`
   -n, --model_name MODEL_NAME
-                        Name of the model.
+                        Name of the model. Defaults to `All`
   -t, --total_sumstat   Outputs a single file containing all of the summary statistics on top of pairwise sumstat.
   -T, --only_total_sumstat
                         Only outputs a single file containing all of the summary statistics. Does not output pairwise sumstat.

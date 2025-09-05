@@ -596,10 +596,16 @@ if __name__ == "__main__":
     parser.add_argument("seq_data", type=Path, help="The path to the sequence data file to be processed.")
 
     # Optional argumentS
-    parser.add_argument("-p", "--model_path", type=Path, default=Path("model/"), help="Path to model.")
-    parser.add_argument("-n", "--model_name", type=str, default="All", help="Name of the model.")
-    parser.add_argument("-t", "--total_sumstat", action="store_true", help="Outputs a single file containing all of the summary statistics on top of pairwise sumstat.")
-    parser.add_argument("-T", "--only_total_sumstat", action="store_true", help="Only outputs a single file containing all of the summary statistics. Does not output pairwise sumstat.")
+    parser.add_argument("-p", "--model_path", type=Path,
+                        default=Path("model/"),
+                        help="Path to model. Defaults to `model/` being in the same directory as `CLADES.py`")
+    parser.add_argument("-n", "--model_name", type=str,
+                        default="All",
+                        help="Name of the model. Defaults to `All`")
+    parser.add_argument("-t", "--total_sumstat", action="store_true",
+                        help="Outputs a single file containing all of the summary statistics on top of pairwise sumstat.")
+    parser.add_argument("-T", "--only_total_sumstat", action="store_true",
+                        help="Only outputs a single file containing all of the summary statistics. Does not output pairwise sumstat.")
 
     args = parser.parse_args()
 
