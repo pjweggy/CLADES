@@ -8,6 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 import argparse
+import shutil
 
 __all__ = [
     "compute_summary_statistics", "species_delimitation",
@@ -615,6 +616,14 @@ if __name__ == "__main__":
 
     if not args.model_path.is_dir():
         print(f"The model path '{args.model_path}' does not exist.")
+        sys.exit(1)
+
+    if not shutil.which("svm-predict") or not shutil.which("svm-scale"):
+        print(
+            "Please install LIBSVM and add it to your PATH, "
+            "so that `svm-predict` and `svm-scale` are accessible.\n"
+            "You can download it here: https://www.csie.ntu.edu.tw/~cjlin/libsvm/"
+        )
         sys.exit(1)
 
     seq_data = args.seq_data
