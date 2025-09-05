@@ -11,7 +11,7 @@ import argparse
 
 __all__ = ["compute_summary_statistics", "species_delimitation", "compute_best_assignment", "get_species_names", "get_class_labels", "write_sumstat", "write_total_sumstat"]
 
-def compute_summary_statistics(seq_data, nbin = 3, delim = '\^'):
+def compute_summary_statistics(seq_data, nbin=3, delim=r'\^'):
     """
     Compute summary statistics for sequence data.
 
